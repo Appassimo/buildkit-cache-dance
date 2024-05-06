@@ -1243,6 +1243,7 @@ function $4c028fad90f63861$var$assertSuccess(cp) {
 
 
 async function $bd1d73aff0732146$var$injectCache(cacheSource, cacheOptions, scratchDir) {
+    const user = (0, $bbb9dac42384d004$exports.getInput)("user") ?? "root";
     // Clean Scratch Directory
     await (0, $evV72$fspromises).rm(scratchDir, {
         recursive: true,
@@ -1263,7 +1264,9 @@ async function $bd1d73aff0732146$var$injectCache(cacheSource, cacheOptions, scra
     // Prepare Dancefile to Access Caches
     const dancefileContent = `
 FROM busybox:1
-COPY buildstamp buildstamp
+RUN adduser -D ${user}
+USER ${user}
+COPY --chown=${user}:${user} buildstamp buildstamp
 RUN --mount=${mountArgs} \
     --mount=type=bind,source=.,target=/var/dance-cache \
     cp -p -R /var/dance-cache/. ${targetPath} || true
@@ -1303,7 +1306,9 @@ async function $bd1d73aff0732146$export$38c65e9f06d3d433(opts) {
 
 
 
+
 async function $8d40300f3635b768$var$extractCache(cacheSource, cacheOptions, scratchDir) {
+    const user = (0, $bbb9dac42384d004$exports.getInput)("user") ?? "root";
     // Prepare Timestamp for Layer Cache Busting
     const date = new Date().toISOString();
     await (0, $evV72$fspromises).mkdir(scratchDir, {
@@ -1315,10 +1320,12 @@ async function $8d40300f3635b768$var$extractCache(cacheSource, cacheOptions, scr
     const mountArgs = (0, $76d06fcdc9bff1f5$export$238315f403b84074)(cacheOptions);
     const dancefileContent = `
 FROM busybox:1
-COPY buildstamp buildstamp
+RUN adduser -D ${user}
+RUN mkdir -p /var/dance-cache/ && chown ${user}:${user} /var/dance-cache
+USER ${user}
+COPY --chown=${user}:${user} buildstamp buildstamp
 RUN --mount=${mountArgs} \
-    mkdir -p /var/dance-cache/ \
-    && cp -p -R ${targetPath}/. /var/dance-cache/ || true
+    cp -p -R ${targetPath}/. /var/dance-cache/ || true
 `;
     await (0, $evV72$fspromises).writeFile((0, $evV72$path).join(scratchDir, "Dancefile.extract"), dancefileContent);
     console.log(dancefileContent);

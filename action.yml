@@ -16,6 +16,9 @@ inputs:
   skip-extraction:
     default: "false"
     description: "Skip the extraction of the cache from the docker container"
+  user:
+    default: "root"
+    description: "User to run operations as. Default: `root`"
 runs:
   using: 'node20'
   main: 'dist/index.js'

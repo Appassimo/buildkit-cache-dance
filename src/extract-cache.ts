@@ -2,8 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { CacheOptions, Opts, getCacheMap, getMountArgsString, getTargetPath } from './opts.js';
 import { run, runPiped } from './run.js';
+import {getInput} from "@actions/core";
 
 async function extractCache(cacheSource: string, cacheOptions: CacheOptions, scratchDir: string) {
+    const user = getInput('user') ?? 'root';
     // Prepare Timestamp for Layer Cache Busting
     const date = new Date().toISOString();
     
@@ -16,10 +18,12 @@ async function extractCache(cacheSource: string, cacheOptions: CacheOptions, scr
 
     const dancefileContent = `
 FROM busybox:1
-COPY buildstamp buildstamp
+RUN adduser -D ${user}
+RUN mkdir -p /var/dance-cache/ && chown ${user}:${user} /var/dance-cache
+USER ${user}
+COPY --chown=${user}:${user} buildstamp buildstamp
 RUN --mount=${mountArgs} \
-    mkdir -p /var/dance-cache/ \
-    && cp -p -R ${targetPath}/. /var/dance-cache/ || true
+    cp -p -R ${targetPath}/. /var/dance-cache/ || true
 `;
     await fs.writeFile(path.join(scratchDir, 'Dancefile.extract'), dancefileContent);
     console.log(dancefileContent);

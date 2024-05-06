@@ -2,9 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { CacheOptions, Opts, getCacheMap, getMountArgsString, getTargetPath } from './opts.js';
 import { run } from './run.js';
-import { notice } from '@actions/core';
+import {getInput, notice} from '@actions/core';
 
 async function injectCache(cacheSource: string, cacheOptions: CacheOptions, scratchDir: string) {
+    const user = getInput('user') ?? 'root';
     // Clean Scratch Directory
     await fs.rm(scratchDir, { recursive: true, force: true });
     await fs.mkdir(scratchDir, { recursive: true });
@@ -22,7 +23,9 @@ async function injectCache(cacheSource: string, cacheOptions: CacheOptions, scra
     // Prepare Dancefile to Access Caches
     const dancefileContent = `
 FROM busybox:1
-COPY buildstamp buildstamp
+RUN adduser -D ${user}
+USER ${user}
+COPY --chown=${user}:${user} buildstamp buildstamp
 RUN --mount=${mountArgs} \
     --mount=type=bind,source=.,target=/var/dance-cache \
     cp -p -R /var/dance-cache/. ${targetPath} || true
