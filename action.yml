@@ -19,7 +19,11 @@ inputs:
   user:
     default: "root"
     description: "User to run operations as. Default: `root`"
+  save-always:
+    default: "false"
+    description: "Run the post step to save the cache even if another step before fails"
 runs:
   using: 'node20'
   main: 'dist/index.js'
   post: 'dist/index.js'
+  post-if: 'success() || github.event.inputs.save-always'

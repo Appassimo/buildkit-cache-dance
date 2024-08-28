@@ -8,7 +8,7 @@ async function extractCache(cacheSource: string, cacheOptions: CacheOptions, scr
     const user = getInput('user') ?? 'root';
     // Prepare Timestamp for Layer Cache Busting
     const date = new Date().toISOString();
-    
+
     await fs.mkdir(scratchDir, { recursive: true });
     await fs.writeFile(path.join(scratchDir, 'buildstamp'), date);
 
@@ -46,7 +46,7 @@ RUN --mount=${mountArgs} \
     );
 
     // Move Cache into Its Place
-    await fs.rm(cacheSource, { recursive: true, force: true });
+    await run('sudo', ['rm', '-rf', cacheSource]);
     await fs.rename(path.join(scratchDir, 'dance-cache'), cacheSource);
 }
 
